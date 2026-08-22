@@ -22,6 +22,7 @@ deployed, monitored, and operated.
 - Backend framework: Express
 - API: Node.js
 - Database: PostgreSQL
+- Database access: Prisma
 - Container runtime: Docker
 - Image registry: Amazon ECR
 - Orchestration: Kubernetes (EKS)
@@ -74,6 +75,15 @@ consistency. PostgreSQL is better suited for querying related data, such as
 users, bookings, and payments, without pushing complex joins into
 application code. The relational model also gives me stronger data
 integrity guarantees as the application grows.
+
+### Database Access: Prisma
+I considered using the raw `pg` driver as an alternative, but chose Prisma
+because the project already uses TypeScript and Prisma provides type-safe
+database access generated directly from the schema. This reduces the need
+to manually define database types and write repetitive SQL queries, which
+helps a small team develop faster while reducing common query and
+type-mismatch errors. The ORM also provides a consistent way to manage
+database operations and migrations as the application grows.
 
 ### Container runtime: Docker
 I considered running the application directly on EC2 with manually
