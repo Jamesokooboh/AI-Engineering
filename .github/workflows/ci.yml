@@ -17,6 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run lint -w apps/backend
       - run: npm test -w apps/backend
+      - run: npm run build -w apps/backend
 
   frontend:
     runs-on: ubuntu-latest
