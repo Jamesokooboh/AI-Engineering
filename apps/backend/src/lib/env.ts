@@ -10,9 +10,20 @@ const DEFAULT_PORT = 4000;
 
 export function parseDatabaseUrl(value: string | undefined): string {
   const url = value ?? DEFAULT_DATABASE_URL;
-  if (!/^postgres(ql)?:\/\//.test(url)) {
+  const invalid = (): never => {
     throw new ConfigError(`DATABASE_URL must be a postgresql:// connection string — got "${url}"`);
+  };
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return invalid();
   }
+
+  if (!/^postgres(ql)?:$/.test(parsed.protocol)) return invalid();
+  if (!parsed.hostname) return invalid();
+
   return url;
 }
 

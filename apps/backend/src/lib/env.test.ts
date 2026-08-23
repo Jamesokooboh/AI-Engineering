@@ -16,6 +16,14 @@ test("parseDatabaseUrl rejects a value with the wrong scheme", () => {
   assert.throws(() => parseDatabaseUrl("mysql://a:b@host:3306/db"), ConfigError);
 });
 
+test("parseDatabaseUrl rejects a bare scheme with no hostname", () => {
+  assert.throws(() => parseDatabaseUrl("postgresql://"), ConfigError);
+});
+
+test("parseDatabaseUrl rejects a malformed value", () => {
+  assert.throws(() => parseDatabaseUrl("not a url"), ConfigError);
+});
+
 test("parsePort falls back to 4000 when unset", () => {
   assert.equal(parsePort(undefined), 4000);
 });
