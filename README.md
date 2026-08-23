@@ -18,12 +18,13 @@ npm install
 ### Backend
 
 ```bash
+docker compose up -d --wait       # starts local Postgres, waits until it accepts connections
 cp apps/backend/.env.example apps/backend/.env
-# edit DATABASE_URL to point at your local Postgres instance
+(cd apps/backend && npx prisma migrate deploy)
 npm run dev -w apps/backend
 ```
 
-Runs on `http://localhost:4000` — check `/health`.
+Runs on `http://localhost:4000` — check `/health` and `/mentors`.
 
 ### Frontend
 

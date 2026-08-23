@@ -11,3 +11,10 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Mentor {
+  id        String   @id @default(uuid())
+  name      String
+  bio       String
+  createdAt DateTime @default(now())
+}
