@@ -18,7 +18,7 @@ npm install
 ### Backend
 
 ```bash
-docker compose up -d              # starts local Postgres
+docker compose up -d --wait       # starts local Postgres, waits until it accepts connections
 cp apps/backend/.env.example apps/backend/.env
 (cd apps/backend && npx prisma migrate deploy)
 npm run dev -w apps/backend

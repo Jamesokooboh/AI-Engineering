@@ -1,8 +1,12 @@
-import { test } from "node:test";
+import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import request from "supertest";
 import { app } from "./app";
 import { prisma } from "./lib/prisma";
+
+after(async () => {
+  await prisma.$disconnect();
+});
 
 test("GET /health returns ok", async () => {
   const res = await request(app).get("/health");
