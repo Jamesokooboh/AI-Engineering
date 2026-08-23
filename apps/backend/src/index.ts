@@ -1,7 +1,6 @@
 import { app } from "./app";
+import { env } from "./lib/env";
 
-const port = process.env.PORT ?? 4000;
-
-app.listen(port, () => {
-  console.log(`API listening on port ${port}`);
+app.listen(env.port, () => {
+  console.log(`API listening on port ${env.port}`);
 });
