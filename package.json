@@ -1,0 +1,7 @@
+{
+  "name": "ai-engineering",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
