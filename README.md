@@ -45,3 +45,20 @@ Backend runtime settings live in `apps/backend/.env` (never committed — see `.
 | `PORT` | `4000` | Port the API listens on. Startup fails with a clear error if set to something other than a valid port number (1-65535). |
 
 Changes take effect on the next `npm run dev`/`npm start` — no rebuild needed.
+
+## Checks
+
+These are the exact checks CI runs on every change to `main` (see `.github/workflows/ci.yml`). Run them locally before pushing — a fresh checkout gets the same pass/fail result as the main gate.
+
+```bash
+docker compose up -d --wait        # backend checks need Postgres running
+
+npm run lint -w apps/backend
+npm test -w apps/backend           # exercises the core path (GET /mentors) against a real database
+npm run build -w apps/backend
+
+npm run lint -w apps/frontend
+npm run build -w apps/frontend
+```
+
+All five must pass before a change can land on `main`.
