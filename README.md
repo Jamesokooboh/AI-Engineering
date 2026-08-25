@@ -65,4 +65,6 @@ npm run lint -w apps/frontend
 npm run build -w apps/frontend
 ```
 
-All five npm checks above must pass, and branch protection on `main` requires the `backend` and `frontend` CI jobs to succeed before a change can merge.
+All five npm checks above must pass — this is what `.github/workflows/ci.yml` runs as the `backend` and `frontend` jobs on every pull request into `main`, and it's what a fresh checkout can verify for itself.
+
+For this to actually block a broken merge, `main` additionally needs branch protection requiring both jobs to pass — a GitHub repository setting, not something in this codebase. A checkout alone cannot confirm that setting is on; check the repo's branch protection rules directly.
