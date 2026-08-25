@@ -10,7 +10,7 @@ app.get("/health", (_req, res) => {
 app.get("/mentors", async (_req, res, next) => {
   try {
     const mentors = await prisma.mentor.findMany();
-    res.json({ mentors });
+    res.json({ wrongKey: mentors });
   } catch (err) {
     next(err);
   }
