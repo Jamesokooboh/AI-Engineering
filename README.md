@@ -11,6 +11,8 @@ This is an npm workspaces monorepo:
 
 ## Getting started
 
+Requires Node.js 20.19.0 or later (CI runs on Node 24 — see `.nvmrc`). Installing on an older Node fails immediately with a clear error rather than a mismatched build.
+
 ```bash
 npm install
 ```
@@ -45,3 +47,24 @@ Backend runtime settings live in `apps/backend/.env` (never committed — see `.
 | `PORT` | `4000` | Port the API listens on. Startup fails with a clear error if set to something other than a valid port number (1-65535). |
 
 Changes take effect on the next `npm run dev`/`npm start` — no rebuild needed.
+
+## Checks
+
+These are the exact checks CI runs on every change to `main` (see `.github/workflows/ci.yml`). Run them locally before pushing — a fresh checkout gets the same pass/fail result as the main gate.
+
+```bash
+docker compose up -d --wait        # prerequisite: backend checks need Postgres running
+```
+
+```bash
+npm run lint -w apps/backend
+npm test -w apps/backend           # exercises the core path (GET /mentors) against a real database
+npm run build -w apps/backend
+
+npm run lint -w apps/frontend
+npm run build -w apps/frontend
+```
+
+All five npm checks above must pass — this is what `.github/workflows/ci.yml` runs as the `backend` and `frontend` jobs on every pull request into `main`, and it's what a fresh checkout can verify for itself.
+
+For this to actually block a broken merge, `main` additionally needs branch protection requiring both jobs to pass — a GitHub repository setting, not something in this codebase. A checkout alone cannot confirm that setting is on; check the repo's branch protection rules directly.
