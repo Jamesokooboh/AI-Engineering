@@ -11,6 +11,8 @@ This is an npm workspaces monorepo:
 
 ## Getting started
 
+Requires Node.js 20.19.0 or later (CI runs on Node 24 — see `.nvmrc`). Installing on an older Node fails immediately with a clear error rather than a mismatched build.
+
 ```bash
 npm install
 ```
@@ -51,8 +53,10 @@ Changes take effect on the next `npm run dev`/`npm start` — no rebuild needed.
 These are the exact checks CI runs on every change to `main` (see `.github/workflows/ci.yml`). Run them locally before pushing — a fresh checkout gets the same pass/fail result as the main gate.
 
 ```bash
-docker compose up -d --wait        # backend checks need Postgres running
+docker compose up -d --wait        # prerequisite: backend checks need Postgres running
+```
 
+```bash
 npm run lint -w apps/backend
 npm test -w apps/backend           # exercises the core path (GET /mentors) against a real database
 npm run build -w apps/backend
@@ -61,4 +65,4 @@ npm run lint -w apps/frontend
 npm run build -w apps/frontend
 ```
 
-All five must pass before a change can land on `main`.
+All five npm checks above must pass, and branch protection on `main` requires the `backend` and `frontend` CI jobs to succeed before a change can merge.
