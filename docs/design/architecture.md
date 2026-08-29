@@ -13,9 +13,9 @@ An AI mentorship platform. Users book and pay for 1-on-1 sessions with mentors; 
   - `src/lib/env.ts` — validates `DATABASE_URL` and `PORT` at startup, with working defaults and a clear failure message if either is malformed.
   - `src/lib/prisma.ts` — the single Prisma client instance (with its Postgres driver adapter), used by every route that touches the database.
 - **PostgreSQL** — the database. Locally it runs via `docker-compose.yml`; schema changes are tracked as Prisma migrations under `apps/backend/prisma/migrations`, committed to git.
-- **GitHub Actions CI** (`.github/workflows/ci.yml`) — runs lint, a real-database test suite, and a type-checking build for both apps on every pull request into `main`. Branch protection on `main` requires both jobs to pass before a change can merge.
+- **GitHub Actions CI** (`.github/workflows/ci.yml`) — runs lint and a type-checking build for both apps on every pull request into `main`; the `backend` job additionally runs a real-database test suite (the `frontend` job has no test step). Branch protection on `main` is *intended* to require both jobs to pass before a change can merge — that rule lives in GitHub's repository settings, not in this git history, so nothing you clone can confirm it's actually on. Check the repo's branch protection settings directly (see README's Checks section for the same caveat).
 
-The request path that actually exists today: an HTTP request hits an Express route in `app.ts`, which queries Postgres through the Prisma client in `lib/prisma.ts`, and returns JSON. That's it — there's no auth, no additional services, and no frontend integration yet.
+The two routes that exist today: `/health` returns a hardcoded object with no database access at all — deliberately, so it still answers when Postgres is down — and `/mentors` queries Postgres through the Prisma client in `lib/prisma.ts` and returns the result as JSON. There's no auth, no additional services, and no frontend integration yet.
 
 ## Why it's structured this way
 
