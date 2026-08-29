@@ -9,6 +9,8 @@ This is an npm workspaces monorepo:
 - `apps/frontend` — Next.js (TypeScript)
 - `apps/backend` — Express API (TypeScript, Prisma, PostgreSQL)
 
+See [docs/design/architecture.md](docs/design/architecture.md) for how the system is structured, why, and what alternatives were rejected.
+
 ## Getting started
 
 Requires Node.js 20.19.0 or later (CI runs on Node 24 — see `.nvmrc`). Installing on an older Node fails immediately with a clear error rather than a mismatched build.

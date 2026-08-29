@@ -1,0 +1,34 @@
+# Architecture Design Note
+
+## What this project is
+
+An AI mentorship platform. Users book and pay for 1-on-1 sessions with mentors; the platform manages mentor availability and scheduling.
+
+## Main parts and how they connect
+
+- **`apps/frontend`** — Next.js (TypeScript). Currently renders a static placeholder page. It does not call the backend yet — there is no wired frontend-to-backend path in the shipped code, and this note doesn't pretend otherwise.
+- **`apps/backend`** — Express API (TypeScript), split into:
+  - `src/index.ts` — the process entry point. Its only job is to load validated config and call `app.listen()`.
+  - `src/app.ts` — the Express app itself: routes (`/health`, `/mentors`) and the error-handling middleware. Exported with no side effects, so it can be imported directly without starting a real server.
+  - `src/lib/env.ts` — validates `DATABASE_URL` and `PORT` at startup, with working defaults and a clear failure message if either is malformed.
+  - `src/lib/prisma.ts` — the single Prisma client instance (with its Postgres driver adapter), used by every route that touches the database.
+- **PostgreSQL** — the database. Locally it runs via `docker-compose.yml`; schema changes are tracked as Prisma migrations under `apps/backend/prisma/migrations`, committed to git.
+- **GitHub Actions CI** (`.github/workflows/ci.yml`) — runs lint, a real-database test suite, and a type-checking build for both apps on every pull request into `main`. Branch protection on `main` requires both jobs to pass before a change can merge.
+
+The request path that actually exists today: an HTTP request hits an Express route in `app.ts`, which queries Postgres through the Prisma client in `lib/prisma.ts`, and returns JSON. That's it — there's no auth, no additional services, and no frontend integration yet.
+
+## Why it's structured this way
+
+**Backend split into `index.ts` / `app.ts`, not one file.** This came directly from a real problem, not a guess: the test suite needs to send real HTTP requests to the Express app (via `supertest`) without binding a real network port — binding a real port made tests flaky and made it impossible to run many tests in parallel safely. Keeping `app.listen()` isolated to `index.ts` means `app.test.ts` can import `app.ts` directly and get a fully working app with zero network binding.
+
+**`lib/env.ts` and `lib/prisma.ts` centralize startup-time, cross-cutting concerns.** Every route that will ever exist needs a validated `DATABASE_URL` and a working Prisma client. Putting both behind one shared module means a misconfigured environment fails once, at startup, with one clear message — not silently, three different ways, the first time three different routes each try to read `process.env` themselves.
+
+**Monorepo, not separate frontend/backend repos.** The two apps share nothing yet, but they're expected to: Prisma generates TypeScript types from the schema, and the plan is for the frontend to eventually import those types directly rather than hand-maintaining a duplicate API contract. A monorepo makes that free; separate repos would require publishing and versioning a shared types package for a two-person team with no reason yet to deploy the two apps on different schedules.
+
+## Alternatives considered
+
+**Separate repositories for frontend and backend, rejected.** The cost is real and immediate (a published, versioned package just to share types) while the benefit — independent deploy cadences, independent access control — doesn't apply yet to a single small team shipping both apps together.
+
+**Everything in one file (`index.ts` calling `app.listen()` directly, with routes inline), rejected.** This is genuinely what an initial pass looked like. It broke the moment automated tests needed to exercise the routes without a real server: either mock the whole app (losing real coverage) or bind a real port per test run (slow, flaky, and a source of the exact kind of hard-to-reproduce CI failure this project's CI setup (AE-006) was built to catch). Splitting the app definition from the process bootstrap fixed this with no other cost.
+
+**Feature-folders (`src/mentors/`, `src/health/`, each with its own routes/model/etc.), rejected for now.** With two routes and zero shared business logic between them, a feature-folder structure is pure ceremony — there's nothing yet for the folders to separate. This is the one structural decision genuinely open to revisiting: the trigger for splitting is a second real domain (bookings, payments) with its own logic, not an arbitrary route count.
