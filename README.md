@@ -59,6 +59,7 @@ docker compose up -d --wait        # prerequisite: backend checks need Postgres 
 ```
 
 ```bash
+npm run format:check               # one canonical style for the whole repo
 npm run lint -w apps/backend
 npm test -w apps/backend           # exercises the core path (GET /mentors) against a real database
 npm run build -w apps/backend
@@ -67,6 +68,8 @@ npm run lint -w apps/frontend
 npm run build -w apps/frontend
 ```
 
-All five npm checks above must pass — this is what `.github/workflows/ci.yml` runs as the `backend` and `frontend` jobs on every pull request into `main`, and it's what a fresh checkout can verify for itself.
+Run `npm run format` to fix formatting automatically.
+
+All six npm checks above must pass — this is what `.github/workflows/ci.yml` runs as the `backend` and `frontend` jobs on every pull request into `main`, and it's what a fresh checkout can verify for itself.
 
 For this to actually block a broken merge, `main` additionally needs branch protection requiring both jobs to pass — a GitHub repository setting, not something in this codebase. A checkout alone cannot confirm that setting is on; check the repo's branch protection rules directly.

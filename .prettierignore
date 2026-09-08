@@ -1,0 +1,6 @@
+package-lock.json
+apps/backend/dist
+apps/backend/src/generated
+apps/backend/prisma/migrations
+apps/frontend/.next
+apps/frontend/next-env.d.ts
