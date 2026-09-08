@@ -9,7 +9,7 @@ This is an npm workspaces monorepo:
 - `apps/frontend` — Next.js (TypeScript)
 - `apps/backend` — Express API (TypeScript, Prisma, PostgreSQL)
 
-See [docs/design/architecture.md](docs/design/architecture.md) for how the system is structured, why, and what alternatives were rejected.
+See [docs/design/architecture.md](docs/design/architecture.md) for how the system is structured, why, and what alternatives were rejected. See [docs/db-driver-verification.md](docs/db-driver-verification.md) for the exact ORM/driver-adapter/database versions verified together, and what hasn't been tested yet.
 
 ## Getting started
 
