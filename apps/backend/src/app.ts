@@ -36,7 +36,11 @@ app.post("/mentors", async (req, res, next) => {
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err);
-  res.status(500).json({ error: "Internal server error" });
+  const status =
+    err && typeof err === "object" && "status" in err && typeof err.status === "number" && err.status >= 400 && err.status < 500
+      ? err.status
+      : 500;
+  res.status(status).json({ error: status < 500 ? "Malformed request body" : "Internal server error" });
 };
 
 app.use(errorHandler);

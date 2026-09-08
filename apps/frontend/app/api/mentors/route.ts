@@ -15,27 +15,38 @@ async function fetchBackend(path: string, init?: RequestInit) {
 }
 
 export async function GET() {
+  let res: Response;
   try {
-    const res = await fetchBackend("/mentors");
-    if (!res.ok) {
-      return NextResponse.json(UNREACHABLE, { status: 502 });
-    }
-    return NextResponse.json(await res.json());
+    res = await fetchBackend("/mentors");
   } catch {
+    // Network failure, connection refused, or the 5s timeout - the backend
+    // never answered at all.
     return NextResponse.json(UNREACHABLE, { status: 502 });
   }
+  // The backend answered - even an error status means it's running. Forward
+  // its response rather than claiming it's unreachable.
+  return NextResponse.json(await res.json(), { status: res.status });
 }
 
 export async function POST(request: Request) {
+  let body: unknown;
   try {
-    const body = await request.json();
-    const res = await fetchBackend("/mentors", {
+    body = await request.json();
+  } catch {
+    // The client sent an unparseable body - our fault to report, not the
+    // backend's; never contacted it.
+    return NextResponse.json({ error: "Malformed request body" }, { status: 400 });
+  }
+
+  let res: Response;
+  try {
+    res = await fetchBackend("/mentors", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await res.json(), { status: res.status });
   } catch {
     return NextResponse.json(UNREACHABLE, { status: 502 });
   }
+  return NextResponse.json(await res.json(), { status: res.status });
 }

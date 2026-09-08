@@ -54,3 +54,13 @@ test("POST /mentors rejects a missing bio", async () => {
   assert.equal(res.status, 400);
   assert.match(res.body.error, /bio is required/);
 });
+
+test("POST /mentors with malformed JSON returns 400, not 500", async () => {
+  const res = await request(app)
+    .post("/mentors")
+    .set("Content-Type", "application/json")
+    .send("{not valid json");
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, "Malformed request body");
+});

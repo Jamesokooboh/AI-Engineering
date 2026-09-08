@@ -7,42 +7,46 @@ let fakeBackend: http.Server;
 let behavior: "success" | "upstream-error" = "success";
 let backendPort: number;
 
-// env.ts reads process.env.BACKEND_URL once at import time, so each test
-// needs a fresh module instance to pick up whatever URL it just set.
-function importRoute() {
-  return import(`./route?t=${Date.now()}-${Math.random()}`);
+function handler(req: http.IncomingMessage, res: http.ServerResponse) {
+  if (behavior === "upstream-error") {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "boom" }));
+    return;
+  }
+  let body = "";
+  req.on("data", (chunk) => (body += chunk));
+  req.on("end", () => {
+    if (req.method === "GET") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ mentors: [{ id: "1", name: "Ada", bio: "Backend mentor" }] }));
+    } else {
+      res.writeHead(201, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ mentor: { id: "2", ...JSON.parse(body) } }));
+    }
+  });
 }
 
+// BACKEND_URL is fixed for the whole file - env.ts reads it once at import
+// time (via a static import inside route.ts, not the cache-busted one
+// below), so changing it mid-run wouldn't take effect. To simulate the
+// backend being down, close and reopen this same server instead.
 before(async () => {
-  fakeBackend = http.createServer((req, res) => {
-    if (behavior === "upstream-error") {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "boom" }));
-      return;
-    }
-    let body = "";
-    req.on("data", (chunk) => (body += chunk));
-    req.on("end", () => {
-      if (req.method === "GET") {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ mentors: [{ id: "1", name: "Ada", bio: "Backend mentor" }] }));
-      } else {
-        res.writeHead(201, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ mentor: { id: "2", ...JSON.parse(body) } }));
-      }
-    });
-  });
+  fakeBackend = http.createServer(handler);
   await new Promise<void>((resolve) => fakeBackend.listen(0, resolve));
   backendPort = (fakeBackend.address() as AddressInfo).port;
+  process.env.BACKEND_URL = `http://localhost:${backendPort}`;
 });
 
 after(() => {
   fakeBackend.close();
 });
 
+function importRoute() {
+  return import(`./route?t=${Date.now()}-${Math.random()}`);
+}
+
 test("GET /api/mentors proxies a successful backend response", async () => {
   behavior = "success";
-  process.env.BACKEND_URL = `http://localhost:${backendPort}`;
   const { GET } = await importRoute();
   const res = await GET();
   const data = await res.json();
@@ -52,7 +56,6 @@ test("GET /api/mentors proxies a successful backend response", async () => {
 
 test("POST /api/mentors proxies a successful create", async () => {
   behavior = "success";
-  process.env.BACKEND_URL = `http://localhost:${backendPort}`;
   const { POST } = await importRoute();
   const req = new Request("http://localhost/api/mentors", {
     method: "POST",
@@ -65,21 +68,39 @@ test("POST /api/mentors proxies a successful create", async () => {
   assert.equal(data.mentor.name, "Grace");
 });
 
-test("GET /api/mentors returns 502 with the unreachable message when the backend errors", async () => {
+test("GET /api/mentors forwards the backend's actual error, not an unreachable message", async () => {
   behavior = "upstream-error";
-  process.env.BACKEND_URL = `http://localhost:${backendPort}`;
   const { GET } = await importRoute();
   const res = await GET();
   const data = await res.json();
-  assert.equal(res.status, 502);
-  assert.match(data.error, /Couldn't reach the server/);
+  // The backend answered (with a 500) - it's running. Forwarding its own
+  // error is the honest response, not claiming it's unreachable.
+  assert.equal(res.status, 500);
+  assert.equal(data.error, "boom");
+  behavior = "success";
 });
 
-test("GET /api/mentors returns 502 when the backend is unreachable entirely", async () => {
-  process.env.BACKEND_URL = "http://localhost:1";
+test("GET /api/mentors returns 502 with the unreachable message when the backend never answers", async () => {
+  await new Promise<void>((resolve) => fakeBackend.close(() => resolve()));
   const { GET } = await importRoute();
   const res = await GET();
   const data = await res.json();
   assert.equal(res.status, 502);
   assert.match(data.error, /Couldn't reach the server/);
+
+  fakeBackend = http.createServer(handler);
+  await new Promise<void>((resolve) => fakeBackend.listen(backendPort, resolve));
+});
+
+test("POST /api/mentors returns 400 for a malformed body without contacting the backend", async () => {
+  const { POST } = await importRoute();
+  const req = new Request("http://localhost/api/mentors", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{not valid json",
+  });
+  const res = await POST(req);
+  const data = await res.json();
+  assert.equal(res.status, 400);
+  assert.equal(data.error, "Malformed request body");
 });
