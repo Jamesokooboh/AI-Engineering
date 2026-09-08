@@ -4,7 +4,10 @@ import { parseDatabaseUrl, parsePort, ConfigError } from "./env";
 
 test("parseDatabaseUrl falls back to the documented default when unset", () => {
   const url = parseDatabaseUrl(undefined);
-  assert.equal(url, "postgresql://user:password@localhost:5432/ai_mentor?schema=public");
+  assert.equal(
+    url,
+    "postgresql://user:password@localhost:5432/ai_mentor?schema=public",
+  );
 });
 
 test("parseDatabaseUrl accepts a valid postgresql:// url", () => {
@@ -13,7 +16,10 @@ test("parseDatabaseUrl accepts a valid postgresql:// url", () => {
 });
 
 test("parseDatabaseUrl rejects a value with the wrong scheme", () => {
-  assert.throws(() => parseDatabaseUrl("mysql://a:b@host:3306/db"), ConfigError);
+  assert.throws(
+    () => parseDatabaseUrl("mysql://a:b@host:3306/db"),
+    ConfigError,
+  );
 });
 
 test("parseDatabaseUrl rejects a bare scheme with no hostname", () => {

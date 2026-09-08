@@ -43,10 +43,10 @@ Runs on `http://localhost:3000`.
 
 Backend runtime settings live in `apps/backend/.env` (never committed — see `.env.example` for the template). Override any of these by editing that file, or by exporting the variable in your shell before running:
 
-| Variable | Default | Description |
-|---|---|---|
-| `DATABASE_URL` | `postgresql://user:password@localhost:5432/ai_mentor?schema=public` (matches `docker-compose.yml`) | Postgres connection string. Startup fails with a clear error if set to something other than a `postgresql://` URL. |
-| `PORT` | `4000` | Port the API listens on. Startup fails with a clear error if set to something other than a valid port number (1-65535). |
+| Variable       | Default                                                                                            | Description                                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL` | `postgresql://user:password@localhost:5432/ai_mentor?schema=public` (matches `docker-compose.yml`) | Postgres connection string. Startup fails with a clear error if set to something other than a `postgresql://` URL.      |
+| `PORT`         | `4000`                                                                                             | Port the API listens on. Startup fails with a clear error if set to something other than a valid port number (1-65535). |
 
 Changes take effect on the next `npm run dev`/`npm start` — no rebuild needed.
 
@@ -59,6 +59,7 @@ docker compose up -d --wait        # prerequisite: backend checks need Postgres 
 ```
 
 ```bash
+npm run format:check               # one canonical style for the whole repo
 npm run lint -w apps/backend
 npm test -w apps/backend           # exercises the core path (GET /mentors) against a real database
 npm run build -w apps/backend
@@ -67,6 +68,8 @@ npm run lint -w apps/frontend
 npm run build -w apps/frontend
 ```
 
-All five npm checks above must pass — this is what `.github/workflows/ci.yml` runs as the `backend` and `frontend` jobs on every pull request into `main`, and it's what a fresh checkout can verify for itself.
+Run `npm run format` to fix formatting automatically.
+
+All six npm checks above must pass — this is what `.github/workflows/ci.yml` runs as the `backend` and `frontend` jobs on every pull request into `main`, and it's what a fresh checkout can verify for itself.
 
 For this to actually block a broken merge, `main` additionally needs branch protection requiring both jobs to pass — a GitHub repository setting, not something in this codebase. A checkout alone cannot confirm that setting is on; check the repo's branch protection rules directly.
