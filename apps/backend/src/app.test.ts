@@ -28,3 +28,15 @@ test("GET /mentors returns mentors from the database", async () => {
   assert.equal(res.body.mentors.length, 1);
   assert.equal(res.body.mentors[0].name, "Ada");
 });
+
+test("driver-adapter path: count and findUnique", async () => {
+  assert.equal(await prisma.mentor.count(), 0);
+
+  const created = await prisma.mentor.create({
+    data: { name: "Driver Check", bio: "x" },
+  });
+  assert.equal(await prisma.mentor.count(), 1);
+
+  const found = await prisma.mentor.findUnique({ where: { id: created.id } });
+  assert.equal(found?.name, "Driver Check");
+});
