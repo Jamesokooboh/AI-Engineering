@@ -42,4 +42,5 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run lint -w apps/frontend
+      - run: npm test -w apps/frontend
       - run: npm run build -w apps/frontend
