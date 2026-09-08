@@ -50,6 +50,12 @@ Backend runtime settings live in `apps/backend/.env` (never committed — see `.
 
 Changes take effect on the next `npm run dev`/`npm start` — no rebuild needed.
 
+Frontend runtime settings live in `apps/frontend/.env` (also never committed; Next.js loads it automatically):
+
+| Variable | Default | Description |
+|---|---|---|
+| `BACKEND_URL` | `http://localhost:4000` | Where the frontend's `/api/mentors` proxy route reaches the backend. Server-side only — never sent to the browser. Startup fails with a clear error if set to something other than a valid URL. |
+
 ## Checks
 
 These are the exact checks CI runs on every change to `main` (see `.github/workflows/ci.yml`). Run them locally before pushing — a fresh checkout gets the same pass/fail result as the main gate.
@@ -64,9 +70,10 @@ npm test -w apps/backend           # exercises the core path (GET /mentors) agai
 npm run build -w apps/backend
 
 npm run lint -w apps/frontend
+npm test -w apps/frontend          # proxy route (GET/POST /api/mentors) against a fake backend server
 npm run build -w apps/frontend
 ```
 
-All five npm checks above must pass — this is what `.github/workflows/ci.yml` runs as the `backend` and `frontend` jobs on every pull request into `main`, and it's what a fresh checkout can verify for itself.
+All six npm checks above must pass — this is what `.github/workflows/ci.yml` runs as the `backend` and `frontend` jobs on every pull request into `main`, and it's what a fresh checkout can verify for itself.
 
 For this to actually block a broken merge, `main` additionally needs branch protection requiring both jobs to pass — a GitHub repository setting, not something in this codebase. A checkout alone cannot confirm that setting is on; check the repo's branch protection rules directly.
